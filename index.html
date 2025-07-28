@@ -1,9 +1,49 @@
-<!doctype html>
-<html>
-  <head>
-    <title>This is the title of the webpage!</title>
-  </head>
-  <body>
-    <p>This is an example paragraph. Anything in the <strong>body</strong> tag will appear on the page, just like this <strong>p</strong> tag and its contents.</p>
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rental Manager</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <header>
+        <h1>Rental Manager</h1>
+    </header>
+
+    <main>
+        <section id="house-section">
+            <h2>Manage Houses</h2>
+            <input type="text" id="house-name" placeholder="New house name" />
+            <button onclick="addHouse()">Add House</button>
+            <ul id="house-list"></ul>
+        </section>
+
+        <section id="booking-section">
+            <h2>Add Booking</h2>
+            <select id="house-select"></select><br /> From: <input type="date" id="start-date" /> To: <input type="date" id="end-date" /> € Value: <input type="number" id="value" /><br />
+            <button onclick="addBooking()">Add Booking</button>
+        </section>
+
+        <section id="history-section">
+            <h2>Booking History</h2>
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>House</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Value (€)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
 </html>
