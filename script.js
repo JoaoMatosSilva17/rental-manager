@@ -20,11 +20,13 @@ function renderHouses() {
         const btn = document.createElement("button");
         btn.textContent = "Remove";
         btn.onclick = () => {
-            houses.splice(i, 1);
-            bookings = bookings.filter(b => b.house !== house);
-            saveData();
-            renderHouses();
-            renderBookings();
+            if (confirm(`Tens a certeza que queres remover a casa "${casa}"? Todas as estadias associadas serão apagadas.`)) {
+                casas.splice(i, 1);
+                estadias = estadias.filter(e => e.casa !== casa);
+                guardarDados();
+                atualizarCasas();
+                atualizarEstadias();
+            }
         };
         li.appendChild(btn);
         houseList.appendChild(li);
@@ -47,15 +49,25 @@ function addHouse() {
 }
 
 function addBooking() {
-    const house = houseSelect.value;
-    const start = document.getElementById("start-date").value;
-    const end = document.getElementById("end-date").value;
-    const value = parseFloat(document.getElementById("value").value);
+    const casa = houseSelect.value;
+    const inicio = document.getElementById("start-date").value;
+    const fim = document.getElementById("end-date").value;
+    const valor = parseFloat(document.getElementById("value").value);
 
-    if (house && start && end && !isNaN(value)) {
-        bookings.push({ house, start, end, value });
-        saveData();
-        renderBookings();
+    if (casa && inicio && fim && !isNaN(valor)) {
+        const sobrepoe = estadias.some(e =>
+            e.casa === casa &&
+            !(fim < e.inicio || inicio > e.fim)
+        );
+
+        if (sobrepoe) {
+            alert("Já existe uma estadia registada para essa casa nestas datas.");
+            return;
+        }
+
+        estadias.push({ casa, inicio, fim, valor });
+        guardarDados();
+        atualizarEstadias();
 
         document.getElementById("start-date").value = "";
         document.getElementById("end-date").value = "";
@@ -70,6 +82,71 @@ function renderBookings() {
         row.innerHTML = `<td>${b.house}</td><td>${b.start}</td><td>${b.end}</td><td>€${b.value.toFixed(2)}</td>`;
         historyTable.appendChild(row);
     });
+}
+
+function atualizarEstadias() {
+    historyTable.innerHTML = "";
+
+    const criterio = document.getElementById("ordenar-por") ?.value || "insercao";
+
+    let lista = [...estadias]; // Cópia da lista original
+
+    if (criterio === "data") {
+        // Ordena por data de início da estadia
+        lista.sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
+    } else if (criterio === "casa") {
+        // Ordena por ordem alfabética do nome da casa
+        lista.sort((a, b) => a.casa.localeCompare(b.casa));
+    }
+    // Se for "insercao", não faz nada (mantém ordem original)
+
+    // Renderiza a tabela
+    lista.forEach(e => {
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+      <td>${e.casa}</td>
+      <td>${e.inicio}</td>
+      <td>${e.fim}</td>
+      <td>€${e.valor.toFixed(2)}</td>
+    `;
+        historyTable.appendChild(linha);
+    });
+}
+
+function exportarDados() {
+    const dados = {
+        casas,
+        estadias
+    };
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "dados-arrendamentos.json";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importarDados(event) {
+    const ficheiro = event.target.files[0];
+    if (!ficheiro) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const dados = JSON.parse(e.target.result);
+            casas = dados.casas || [];
+            estadias = dados.estadias || [];
+            guardarDados();
+            atualizarCasas();
+            atualizarEstadias();
+            alert("Dados importados com sucesso.");
+        } catch (err) {
+            alert("Erro ao importar ficheiro.");
+        }
+    };
+    reader.readAsText(ficheiro);
 }
 
 renderHouses();
