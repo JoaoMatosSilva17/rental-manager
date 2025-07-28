@@ -16,26 +16,26 @@
     <main>
         <section id="house-section">
             <h2>Gerir Casas</h2>
-            <input type="text" id="house-name" placeholder="Nome da nova casa" />
-            <button onclick="addHouse()">Adicionar Casa</button>
-            <ul id="house-list"></ul>
+            <input type="text" id="nome-casa" placeholder="Nome da nova casa" />
+            <button onclick="adicionarCasa()">Adicionar Casa</button>
+            <ul id="lista-casas"></ul>
         </section>
 
         <section id="booking-section">
             <h2>Adicionar Estadia</h2>
-            <label for="house-select">Casa:</label>
-            <select id="house-select"></select><br /> De: <input type="date" id="start-date" /> Até: <input type="date" id="end-date" /> Valor (€): <input type="number" id="value" /><br />
-            <button onclick="addBooking()">Registar Estadia</button>
+            <label for="seletor-casa">Casa:</label>
+            <select id="seletor-casa"></select><br /> De: <input type="date" id="data-inicio" /> Até: <input type="date" id="data-fim" /> Valor (€): <input type="number" id="valor" /><br />
+            <button onclick="adicionarEstadia()">Registar Estadia</button>
         </section>
         <label for="ordenar-por">Ordenar histórico por:</label>
         <select id="ordenar-por" onchange="atualizarEstadias()">
-        <option value="insercao">Ordem de inserção</option>
-        <option value="casa">Nome da casa</option>
-        <option value="data">Data da estadia</option>
+        <option valor="insercao">Ordem de inserção</option>
+        <option valor="casa">Nome da casa</option>
+        <option valor="data">Data da estadia</option>
         </select>
         <section id="history-section">
             <h2>Histórico de Estadias</h2>
-            <table id="history-table">
+            <table id="tabela-historico">
                 <thead>
                     <tr>
                         <th>Casa</th>

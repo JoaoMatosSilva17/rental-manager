@@ -1,24 +1,25 @@
-const houseList = document.getElementById("house-list");
-const houseSelect = document.getElementById("house-select");
-const historyTable = document.querySelector("#history-table tbody");
+const listaCasas = document.getElementById("lista-casas");
+const seletorCasa = document.getElementById("seletor-casa");
+const tabelaHistorico = document.querySelector("#tabela-historico tbody");
 
-let houses = JSON.parse(localStorage.getItem("houses")) || [];
-let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+let casas = JSON.parse(localStorage.getItem("casas")) || [];
+let estadias = JSON.parse(localStorage.getItem("estadias")) || [];
 
-function saveData() {
-    localStorage.setItem("houses", JSON.stringify(houses));
-    localStorage.setItem("bookings", JSON.stringify(bookings));
+function guardarDados() {
+    localStorage.setItem("casas", JSON.stringify(casas));
+    localStorage.setItem("estadias", JSON.stringify(estadias));
 }
 
-function renderHouses() {
-    houseList.innerHTML = "";
-    houseSelect.innerHTML = "";
+function atualizarCasas() {
+    listaCasas.innerHTML = "";
+    seletorCasa.innerHTML = "";
 
-    houses.forEach((house, i) => {
+    casas.forEach((casa, i) => {
         const li = document.createElement("li");
-        li.textContent = house;
+        li.textContent = casa;
+
         const btn = document.createElement("button");
-        btn.textContent = "Remove";
+        btn.textContent = "Remover";
         btn.onclick = () => {
             if (confirm(`Tens a certeza que queres remover a casa "${casa}"? Todas as estadias associadas serão apagadas.`)) {
                 casas.splice(i, 1);
@@ -28,96 +29,136 @@ function renderHouses() {
                 atualizarEstadias();
             }
         };
+
         li.appendChild(btn);
-        houseList.appendChild(li);
+        listaCasas.appendChild(li);
 
         const opt = document.createElement("option");
-        opt.value = house;
-        opt.textContent = house;
-        houseSelect.appendChild(opt);
+        opt.value = casa;
+        opt.textContent = casa;
+        seletorCasa.appendChild(opt);
     });
 }
 
-function addHouse() {
-    const name = document.getElementById("house-name").value.trim();
-    if (name && !houses.includes(name)) {
-        houses.push(name);
-        saveData();
-        renderHouses();
-        document.getElementById("house-name").value = "";
-    }
-}
-
-function addBooking() {
-    const casa = houseSelect.value;
-    const inicio = document.getElementById("start-date").value;
-    const fim = document.getElementById("end-date").value;
-    const valor = parseFloat(document.getElementById("value").value);
-
-    if (casa && inicio && fim && !isNaN(valor)) {
-        const sobrepoe = estadias.some(e =>
-            e.casa === casa &&
-            !(fim < e.inicio || inicio > e.fim)
-        );
-
-        if (sobrepoe) {
-            alert("Já existe uma estadia registada para essa casa nestas datas.");
-            return;
-        }
-
-        estadias.push({ casa, inicio, fim, valor });
+function adicionarCasa() {
+    const nome = document.getElementById("nome-casa").value.trim();
+    if (nome && !casas.includes(nome)) {
+        casas.push(nome);
         guardarDados();
-        atualizarEstadias();
-
-        document.getElementById("start-date").value = "";
-        document.getElementById("end-date").value = "";
-        document.getElementById("value").value = "";
+        atualizarCasas();
+        document.getElementById("nome-casa").value = "";
     }
 }
 
-function renderBookings() {
-    historyTable.innerHTML = "";
-    bookings.forEach(b => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${b.house}</td><td>${b.start}</td><td>${b.end}</td><td>€${b.value.toFixed(2)}</td>`;
-        historyTable.appendChild(row);
-    });
+function adicionarEstadia() {
+    const casa = seletorCasa.value;
+    const inicio = document.getElementById("data-inicio").value;
+    const fim = document.getElementById("data-fim").value;
+    const valor = parseFloat(document.getElementById("valor").value);
+
+    if (inicio < fim) {
+
+        if (casa && inicio && fim && !isNaN(valor)) {
+            const sobrepoe = estadias.some(e =>
+                e.casa === casa &&
+                !(fim < e.inicio || inicio > e.fim)
+            );
+
+            if (sobrepoe) {
+                alert("Já existe uma estadia registada para essa casa nestas datas.");
+                return;
+            }
+
+            estadias.push({ casa, inicio, fim, valor });
+            guardarDados();
+            atualizarEstadias();
+
+            document.getElementById("data-inicio").value = "";
+            document.getElementById("data-fim").value = "";
+            document.getElementById("valor").value = "";
+        }
+    } else {
+        alert("A data de fim não pode ser anterior à data de início!")
+    }
 }
 
 function atualizarEstadias() {
-    historyTable.innerHTML = "";
+    tabelaHistorico.innerHTML = "";
 
-    const criterio = document.getElementById("ordenar-por") ?.value || "insercao";
+    const elemento = document.getElementById("ordenar-por");
+    const criterio = elemento ? elemento.value : "insercao";
+    console.log(criterio);
+    let lista = [...estadias];
 
-    let lista = [...estadias]; // Cópia da lista original
-
-    if (criterio === "data") {
-        // Ordena por data de início da estadia
+    if (criterio === "Data da estadia") {
         lista.sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
-    } else if (criterio === "casa") {
-        // Ordena por ordem alfabética do nome da casa
-        lista.sort((a, b) => a.casa.localeCompare(b.casa));
+    } else if (criterio === "Nome da casa") {
+        lista.sort((a, b) => {
+            const comparaCasa = a.casa.localeCompare(b.casa);
+            if (comparaCasa !== 0) return comparaCasa;
+            return new Date(a.inicio) - new Date(b.inicio);
+        });
     }
-    // Se for "insercao", não faz nada (mantém ordem original)
 
-    // Renderiza a tabela
-    lista.forEach(e => {
+    lista.forEach((e, index) => {
         const linha = document.createElement("tr");
         linha.innerHTML = `
       <td>${e.casa}</td>
       <td>${e.inicio}</td>
       <td>${e.fim}</td>
       <td>€${e.valor.toFixed(2)}</td>
+      <td><button onclick="removerEstadia(${index})">Remover</button></td>
     `;
-        historyTable.appendChild(linha);
+        tabelaHistorico.appendChild(linha);
     });
+
+    const total = lista.reduce((soma, e) => soma + e.valor, 0);
+
+    const linhaTotal = document.createElement("tr");
+    linhaTotal.innerHTML = `
+    <td><strong>Total</strong></td>
+    <td></td>
+    <td></td>
+    <td><strong>€${total.toFixed(2)}</strong></td>
+    <td></td>
+  `;
+    tabelaHistorico.appendChild(linhaTotal);
+}
+
+function removerEstadia(index) {
+    if (confirm("Tens a certeza que queres remover esta estadia?")) {
+        // Apaga a estadia com base na posição na lista ordenada
+        const elemento = document.getElementById("ordenar-por");
+        const criterio = elemento ? elemento.value : "insercao";
+
+        // Recriar lista ordenada igual à que se mostra
+        let lista = [...estadias];
+        if (criterio === "data") {
+            lista.sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
+        } else if (criterio === "casa") {
+            lista.sort((a, b) => a.casa.localeCompare(b.casa));
+        }
+
+        const estadiaARemover = lista[index];
+
+        // Encontrar o índice verdadeiro no array original
+        const indexOriginal = estadias.findIndex(e =>
+            e.casa === estadiaARemover.casa &&
+            e.inicio === estadiaARemover.inicio &&
+            e.fim === estadiaARemover.fim &&
+            e.valor === estadiaARemover.valor
+        );
+
+        if (indexOriginal !== -1) {
+            estadias.splice(indexOriginal, 1);
+            guardarDados();
+            atualizarEstadias();
+        }
+    }
 }
 
 function exportarDados() {
-    const dados = {
-        casas,
-        estadias
-    };
+    const dados = { casas, estadias };
     const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
@@ -128,8 +169,8 @@ function exportarDados() {
     URL.revokeObjectURL(url);
 }
 
-function importarDados(event) {
-    const ficheiro = event.target.files[0];
+function importarDados(evento) {
+    const ficheiro = evento.target.files[0];
     if (!ficheiro) return;
 
     const reader = new FileReader();
@@ -142,12 +183,13 @@ function importarDados(event) {
             atualizarCasas();
             atualizarEstadias();
             alert("Dados importados com sucesso.");
-        } catch (err) {
+        } catch (erro) {
             alert("Erro ao importar ficheiro.");
         }
     };
     reader.readAsText(ficheiro);
 }
 
-renderHouses();
-renderBookings();
+// Inicialização
+atualizarCasas();
+atualizarEstadias();
